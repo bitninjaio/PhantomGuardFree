@@ -22,6 +22,11 @@ modern React-based admin interface. Protect your site with configurable
 security rules, audit logging, and presets. Upgrade to PhantomGuard Pro for
 malware scanning, DNS management, and additional hardening options.
 
+== Terms & Privacy ==
+By using PhantomGuard, you agree to:
+- Terms of Service: https://phantomguard.io/terms
+- Privacy Policy: https://phantomguard.io/privacy
+
 == Highlights ==
 – Security hardening with Basic, Recommended, and Advanced presets
 – Four functional rules: Force HTTPS for admin, Hide WP version, Audit logging, Obscure login feedback
