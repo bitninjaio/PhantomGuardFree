@@ -1,0 +1,303 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* WordPress admin compatibility */
+/* .phguard-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+} */
+body {
+  font-family: "Mulish", sans-serif;
+  #wpwrap {
+    #wpcontent {
+      background-color: #f8fafc;
+      padding-left: 0px;
+      
+      #wpbody-content {
+        min-height: 100vh;
+      }
+    }
+  }
+}
+
+.dark body {
+  #wpwrap {
+    #wpcontent {
+      background-color: #111827;
+    }
+  }
+}
+
+/* Reset WordPress .wrap h1 padding that leaks into page headers */
+.phguard-container h1 {
+  padding: 0;
+  margin: 0;
+}
+
+.phguard-card {
+  @apply bg-white dark:bg-gray-800 shadow rounded-lg p-6;
+}
+
+.phguard-button {
+  @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 dark:focus:ring-offset-gray-800;
+}
+
+.phguard-button-secondary {
+  @apply inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 dark:focus:ring-offset-gray-800;
+}
+
+.phguard-button-danger {
+  @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-wp-red hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wp-red dark:focus:ring-offset-gray-800;
+}
+
+.phguard-button-success {
+  @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-wp-green hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wp-green dark:focus:ring-offset-gray-800;
+}
+
+.phguard-input {
+  @apply block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-indigo-600 dark:focus:ring-indigo-500 focus:border-indigo-600 dark:focus:border-indigo-500;
+}
+
+/* Override WordPress core select hover color */
+.phguard-container select,
+.phguard-container .wp-core-ui select,
+.phguard-container select:hover,
+.phguard-container .wp-core-ui select:hover,
+.phguard-container select:focus,
+.phguard-container .wp-core-ui select:focus {
+  color: #1f2937 !important;
+}
+
+.phguard-container select option,
+.phguard-container .wp-core-ui select option {
+  color: #1f2937 !important;
+}
+
+.phguard-container select option:hover,
+.phguard-container .wp-core-ui select option:hover {
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+.dark .phguard-container select,
+.dark .phguard-container .wp-core-ui select,
+.dark .phguard-container select:hover,
+.dark .phguard-container .wp-core-ui select:hover,
+.dark .phguard-container select:focus,
+.dark .phguard-container .wp-core-ui select:focus {
+  color: #f3f4f6 !important;
+}
+
+.dark .phguard-container select option,
+.dark .phguard-container .wp-core-ui select option {
+  color: #f3f4f6 !important;
+  background-color: #1f2937 !important;
+}
+
+.dark .phguard-container select option:hover,
+.dark .phguard-container .wp-core-ui select option:hover {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
+}
+
+.phguard-tab {
+  @apply px-6 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 whitespace-nowrap border-b-2 border-transparent;
+}
+
+.phguard-tab-active {
+  @apply px-6 py-3 text-sm font-medium text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-500;
+}
+
+/* AG Grid Dark Mode Overrides */
+.dark .ag-theme-alpine {
+  --ag-background-color: #1f2937;
+  --ag-foreground-color: #f3f4f6;
+  --ag-border-color: #4b5563;
+  --ag-secondary-border-color: #374151;
+  --ag-header-background-color: #111827;
+  --ag-tooltip-background-color: #1f2937;
+  --ag-odd-row-background-color: #1f2937;
+  --ag-control-panel-background-color: #111827;
+  --ag-subheader-background-color: #1f2937;
+  --ag-disabled-foreground-color: rgba(243, 244, 246, 0.5);
+  --ag-chip-background-color: rgba(243, 244, 246, 0.1);
+  --ag-input-disabled-border-color: rgba(75, 85, 99, 0.3);
+  --ag-secondary-foreground-color: #f3f4f6;
+  --ag-menu-background-color: #111827;
+  --ag-panel-background-color: #111827;
+}
+
+/* React Date Range Dark Mode Overrides */
+.dark .rdrDateRangePickerWrapper {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrDefinedRangesWrapper {
+  background-color: #1f2937 !important;
+  border-right: 1px solid #4b5563 !important;
+}
+
+.dark .rdrStaticRanges {
+  background-color: #1f2937 !important;
+}
+
+.dark .rdrStaticRange {
+  background-color: transparent !important;
+  border: none !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrStaticRange:hover {
+  background-color: #374151 !important;
+}
+
+.dark .rdrStaticRangeLabel {
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrInputRanges {
+  background-color: #1f2937 !important;
+  border-top: 1px solid #4b5563 !important;
+}
+
+.dark .rdrInputRange {
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrInputRangeInput {
+  background-color: #374151 !important;
+  border: 1px solid #4b5563 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrCalendarWrapper {
+  background-color: #1f2937 !important;
+}
+
+.dark .rdrMonthAndYearWrapper {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+  border-bottom: 1px solid #4b5563 !important;
+}
+
+.dark .rdrMonthAndYearPickers {
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrMonthAndYearPickers select {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+  border-color: #4b5563 !important;
+}
+
+.dark .rdrMonthPicker select,
+.dark .rdrYearPicker select {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+  border-color: #4b5563 !important;
+}
+
+.dark .rdrNextPrevButton {
+  background-color: transparent !important;
+  border: 1px solid #4b5563 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrNextPrevButton:hover {
+  background-color: #374151 !important;
+}
+
+/* .dark .rdrNextPrevButton i {
+  border-color: #f3f4f6 !important;
+} */
+
+.dark .rdrMonths {
+  background-color: #1f2937 !important;
+}
+
+.dark .rdrMonth {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrMonthName {
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrWeekDays {
+  border-bottom: 1px solid #4b5563 !important;
+}
+
+.dark .rdrWeekDay {
+  color: #9ca3af !important;
+}
+
+.dark .rdrDays {
+  background-color: #1f2937 !important;
+}
+
+.dark .rdrDay {
+  background-color: transparent !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrDay[style*="color"] {
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrDay:hover {
+  background-color: #374151 !important;
+}
+
+.dark .rdrDay.rdrDayPassive {
+  color: #6b7280 !important;
+}
+
+.dark .rdrDay.rdrDayPassive[style*="color"] {
+  color: #6b7280 !important;
+}
+
+.dark .rdrDay.rdrDayPassive:hover {
+  background-color: transparent !important;
+}
+
+.dark .rdrDay.rdrDayToday .rdrDayNumber span:after {
+  background-color: #6366f1 !important;
+}
+
+.dark .rdrDayNumber {
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrDayNumber span {
+  color: #f3f4f6 !important;
+}
+
+.dark .rdrInRange {
+  background-color: rgba(99, 102, 241, 0.2) !important;
+}
+
+.dark .rdrInRange[style*="color"] {
+  background-color: rgba(99, 102, 241, 0.2) !important;
+}
+
+.dark .rdrStartEdge,
+.dark .rdrEndEdge {
+  background-color: #6366f1 !important;
+}
+
+.dark .rdrStartEdge[style*="color"],
+.dark .rdrEndEdge[style*="color"] {
+  background-color: #6366f1 !important;
+}
+
+.dark .rdrDay.rdrDayStartOfMonth .rdrInRange,
+.dark .rdrDay.rdrDayEndOfMonth .rdrInRange {
+  background-color: rgba(99, 102, 241, 0.2) !important;
+}
+
+.dark .rdrDay.rdrDayStartOfWeek .rdrInRange,
+.dark .rdrDay.rdrDayEndOfWeek .rdrInRange {
+  background-color: rgba(99, 102, 241, 0.2) !important;
+}
