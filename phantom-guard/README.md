@@ -22,7 +22,6 @@ PhantomGuard helps you protect your WordPress site with configurable security ru
 | **React admin UI** | Modern interface with i18n (English, German, Italian) |
 | **Dashboard & onboarding** | Overview and guided setup flow |
 | **Settings & Support** | Configuration and help pages |
-| **License key** | Configure Pro license for premium features |
 
 ### PhantomGuard Pro
 
@@ -126,4 +125,4 @@ Use `npm run build:dev` for an unminified development build, or `npm run build` 
 
 ## License
 
-GPL-2.0-or-later. See [LICENSE.txt](LICENSE.txt) for details.
+GPL-3.0-or-later. See [LICENSE.txt](LICENSE.txt) for details.
