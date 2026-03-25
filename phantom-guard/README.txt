@@ -124,13 +124,6 @@ PhantomGuard Pro additionally uses these services:
 * Terms: https://goqr.me/legal/tos-api.html
 * Privacy: https://goqr.me/privacy-safety-security/
 
-= Google Charts (www.gstatic.com) =
-* Function: Chart rendering (traffic, geo) in Dashboard and DNS Management.
-* Data sent: Chart data (traffic stats, country codes) – used only for visualization.
-* When: Viewing Dashboard or DNS Management with charts.
-* Terms: https://developers.google.com/chart/terms
-* Privacy: https://policies.google.com/privacy
-
 = IPify (api.ipify.org) =
 * Function: Detect server external IP for license validation.
 * Data sent: None (returns public IP only).
@@ -144,16 +137,6 @@ PhantomGuard Pro additionally uses these services:
 * When: Integrity verification during scan.
 * Terms: https://wordpress.com/tos/
 * Privacy: https://wordpress.org/about/privacy/
-
-= AG Grid Community (ag-grid-community, ag-grid-react) =
-* Function: Data grid component for tables (DNS records, infected files list).
-* Source: Bundled locally in the plugin via npm; no CDN or remote requests.
-* Where used: DNS Management page (Pro), Malware Scanner infected files table (Pro).
-* License: MIT (https://github.com/ag-grid/ag-grid/blob/master/LICENSE.txt).
-* Note: PhantomGuard uses the Community edition only; no Enterprise features or external calls.
-
-= JavaScript and CSS Resources =
-* react-google-charts: Loads Google Charts loader from www.gstatic.com when charts are displayed (Pro only).
 
 = User Consent =
 License activation and malware scanning require a valid PhantomGuard license. By activating the license, you consent to the data flows described above. No additional opt-in is required for these core features.

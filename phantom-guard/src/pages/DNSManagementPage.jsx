@@ -1,17 +1,9 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useConfirm } from '../hooks/useConfirm';
-import { AgGridReact } from 'ag-grid-react';
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { MoreVertical, Edit, Trash2, CalendarSearch, X, Activity, BarChart3, Settings, AlertCircle, Lock, Cloud, Globe, Shield, Zap, List } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Activity, BarChart3, Settings, Lock, Cloud, Globe, Shield, Zap } from 'lucide-react';
 import PremiumFeatureBanner from '../components/PremiumFeatureBanner';
-import { Chart } from 'react-google-charts';
-import { DateRangePicker } from 'react-date-range';
-import 'react-date-range/dist/styles.css';
-import 'react-date-range/dist/theme/default.css';
-import { format } from 'date-fns';
 
 const DNSManagementPage = ({ onboardingStep }) => {
   const { t } = useTranslation();
@@ -59,31 +51,8 @@ const DNSManagementPage = ({ onboardingStep }) => {
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [isDeleting, setIsDeleting] = useState(null);
   const [actionMenuOpen, setActionMenuOpen] = useState(null);
   const [actionMenuPosition, setActionMenuPosition] = useState({ x: 0, y: 0, visible: false });
-
-  // DNS Statistics state
-  const [dnsStatistics, setDnsStatistics] = useState(null);
-  const [isLoadingStats, setIsLoadingStats] = useState(false);
-  
-  // Date range state for DNS statistics
-  const getLast30DaysRange = () => {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30);
-    return {
-      startDate: startDate,
-      endDate: endDate,
-      key: 'selection'
-    };
-  };
-
-  const [dnsStartDate, setDnsStartDate] = useState('');
-  const [dnsEndDate, setDnsEndDate] = useState('');
-  const [showDnsDatePicker, setShowDnsDatePicker] = useState(false);
-  const [dnsDateRange, setDnsDateRange] = useState([getLast30DaysRange()]);
-  const dnsDatePickerRef = useRef(null);
 
   // Domain from API response (data.response.Domain)
   const [domainName, setDomainName] = useState('');
@@ -99,18 +68,15 @@ const DNSManagementPage = ({ onboardingStep }) => {
     setIsLoadingRecords(false);
   }, []);
 
-  const handleDeleteRecord = useCallback(async (id) => {
-    // Premium feature - no action in free version
-  }, []);
-
   const filteredRecords = useMemo(() => {
     if (!searchQuery.trim()) return dnsRecords;
     const query = searchQuery.toLowerCase();
-    return dnsRecords.filter(record => 
-      record.name.toLowerCase().includes(query) ||
-      record.value.toLowerCase().includes(query) ||
-      record.type.toLowerCase().includes(query)
-    );
+    return dnsRecords.filter((record) => {
+      const name = String(record.name ?? '').toLowerCase();
+      const value = String(record.value ?? '').toLowerCase();
+      const typeStr = getDnsTypeString(record.type).toLowerCase();
+      return name.includes(query) || value.includes(query) || typeStr.includes(query);
+    });
   }, [dnsRecords, searchQuery]);
 
   // Get the record for the open action menu
@@ -118,159 +84,46 @@ const DNSManagementPage = ({ onboardingStep }) => {
     return actionMenuOpen ? filteredRecords.find(r => r.id === actionMenuOpen) : null;
   }, [actionMenuOpen, filteredRecords]);
 
-  const columnDefs = useMemo(() => [
-    {
-      field: 'type',
-      headerName: t('dns.type', { defaultValue: 'TYPE' }),
-      width: 100,
-      suppressMenu: true,
-      sortable: true,
-      cellStyle: { display: 'flex', justifyContent: 'center', alignItems: 'center' },
-      cellRenderer: (params) => {
-        return (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium border border-red-300 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
-            {params.value}
-          </span>
-        );
-      },
-    },
-    {
-      field: 'name',
-      headerName: t('dns.name', { defaultValue: 'NAME' }),
-      flex: 1,
-      minWidth: 150,
-      suppressMenu: true,
-      sortable: true,
-      cellRenderer: (params) => {
-        const displayName = params.value && params.value.trim() ? params.value : domainName;
-        const truncated = displayName.length > 30 ? displayName.substring(0, 27) + '...' : displayName;
-        return (
-          <span className="text-sm text-gray-900 dark:text-gray-100" title={displayName}>
-            {truncated}
-          </span>
-        );
-      },
-    },
-    {
-      field: 'value',
-      headerName: t('dns.value', { defaultValue: 'VALUE' }),
-      flex: 1,
-      minWidth: 120,
-      suppressMenu: true,
-      sortable: true,
-    },
-    {
-      field: 'weight',
-      headerName: t('dns.weight', { defaultValue: 'WEIGHT' }),
-      width: 100,
-      suppressMenu: true,
-      sortable: true,
-      cellRenderer: (params) => {
-        return params.value || '-';
-      },
-    },
-    {
-      field: 'ttl',
-      headerName: t('dns.ttl', { defaultValue: 'TTL' }),
-      width: 100,
-      suppressMenu: true,
-      sortable: true,
-      cellStyle: { display: 'flex', justifyContent: 'center', alignItems: 'center' },
-      cellRenderer: (params) => {
-        return (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium border border-orange-300 bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800">
-            {params.value}
-          </span>
-        );
-      },
-    },
-    {
-      field: 'cdnAcceleration',
-      headerName: t('dns.cdnAcceleration', { defaultValue: 'CDN ACCELERATION' }),
-      width: 180,
-      suppressMenu: true,
-      sortable: true,
-      cellStyle: { display: 'flex', justifyContent: 'center', alignItems: 'center' },
-      cellRenderer: (params) => {
-        if (!params.value) return '-';
-        return (
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-medium border border-green-300 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 flex items-center gap-1">
-              <Zap className="w-3 h-3" />
-              {t('dns.enabled', { defaultValue: 'Enabled' })}
-            </span>
-            <button 
-              disabled
-              className="text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60"
-              title={t('dns.cdnSettings', { defaultValue: 'CDN Settings' })}
-            >
-              <Settings className="w-4 h-4" />
-            </button>
-          </div>
-        );
-      },
-    },
-    {
-      field: 'actions',
-      headerName: '',
-      width: 50,
-      suppressMenu: true,
-      sortable: false,
-      cellStyle: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4px' },
-      cellRenderer: (params) => {
-        const record = params.data;
-        // Check if this is the main A record at root (name is empty or equals domain name AND type is A)
-        const isRootDomain = !record.name || record.name.trim() === '' || record.name === domainName;
-        const isMainARecord = isRootDomain && record.type === 'A';
-        
-        // Hide actions menu only for main A record at root
-        if (isMainARecord) {
-          return null;
-        }
-        
-        const isOpen = actionMenuOpen === record.id;
-        const buttonId = `action-btn-${record.id}`;
-        
-        return (
-          <div className="relative w-full h-full flex items-center justify-center">
-            <button
-              id={buttonId}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                
-                if (isOpen) {
-                  setActionMenuOpen(null);
-                  setActionMenuPosition({ x: 0, y: 0, visible: false });
-                } else {
-                  const button = e.currentTarget;
-                  const rect = button.getBoundingClientRect();
-                  setActionMenuPosition({
-                    x: rect.right,
-                    y: rect.bottom + 4,
-                    visible: true
-                  });
-                  setActionMenuOpen(record.id);
-                }
-              }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-              }}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
-              type="button"
-            >
-              <MoreVertical className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            </button>
-          </div>
-        );
-      },
-    },
-  ], [t, actionMenuOpen, handleDeleteRecord, isDeleting, domainName]);
-
-  const defaultColDef = useMemo(() => ({
-    resizable: true,
-    filter: false,
-  }), []);
+  const renderDnsActionsCell = (record) => {
+    const typeStr = getDnsTypeString(record.type);
+    const isRootDomain = !record.name || String(record.name).trim() === '' || record.name === domainName;
+    const isMainARecord = isRootDomain && typeStr === 'A';
+    if (isMainARecord) {
+      return null;
+    }
+    const isOpen = actionMenuOpen === record.id;
+    const buttonId = `action-btn-${record.id}`;
+    return (
+      <div className="relative flex h-full w-full items-center justify-center">
+        <button
+          id={buttonId}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (isOpen) {
+              setActionMenuOpen(null);
+              setActionMenuPosition({ x: 0, y: 0, visible: false });
+            } else {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setActionMenuPosition({
+                x: rect.right,
+                y: rect.bottom + 4,
+                visible: true,
+              });
+              setActionMenuOpen(record.id);
+            }
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+          }}
+          className="cursor-pointer rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
+        >
+          <MoreVertical className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+        </button>
+      </div>
+    );
+  };
 
   // Close action menu when clicking outside
   useEffect(() => {
@@ -296,64 +149,6 @@ const DNSManagementPage = ({ onboardingStep }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside, true);
   }, [actionMenuOpen]);
 
-
-  // Close date picker when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dnsDatePickerRef.current && !dnsDatePickerRef.current.contains(event.target)) {
-        setShowDnsDatePicker(false);
-      }
-    };
-
-    if (showDnsDatePicker) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showDnsDatePicker]);
-
-  // Handle date range selection
-  const handleDnsDateRangeChange = (item) => {
-    setDnsDateRange([item.selection]);
-  };
-
-  // Apply date range (called when Apply button is clicked)
-  const applyDnsDateRange = () => {
-    const start = dnsDateRange[0].startDate;
-    const end = dnsDateRange[0].endDate;
-    
-    // Set start date to beginning of day (00:00:00)
-    const startDate = new Date(start);
-    startDate.setHours(0, 0, 0, 0);
-    
-    // Set end date to end of day (23:59:59)
-    const endDate = new Date(end);
-    endDate.setHours(23, 59, 59, 999);
-    
-    // Format as ISO 8601 with UTC timezone indicator
-    const formatDateForAPI = (date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const seconds = String(date.getSeconds()).padStart(2, '0');
-      
-      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}Z`;
-    };
-    
-    setDnsStartDate(formatDateForAPI(startDate));
-    setDnsEndDate(formatDateForAPI(endDate));
-    setShowDnsDatePicker(false);
-  };
-
-  // Clear date filter (reset to last 30 days - API default)
-  const clearDnsDateFilter = () => {
-    setDnsStartDate('');
-    setDnsEndDate('');
-    setDnsDateRange([getLast30DaysRange()]);
-    setShowDnsDatePicker(false);
-  };
-
   // Fetch DNS records
   useEffect(() => {
     if (mainTab !== 'dns' || activeTab !== 'records') return;
@@ -363,78 +158,6 @@ const DNSManagementPage = ({ onboardingStep }) => {
   // No API in free version
   useEffect(() => {
     setDnsServerStatus(false);
-  }, []);
-
-  // Fetch DNS statistics - no API in free version (moved to CDN tab)
-  useEffect(() => {
-    if (mainTab !== 'cdn') return;
-    setDnsStatistics(null);
-    setIsLoadingStats(false);
-  }, [mainTab]);
-
-  // Process chart data
-  const queriesServedChartData = useMemo(() => {
-    if (!dnsStatistics || !dnsStatistics.QueriesServedChart) return [];
-    const chartData = [['Date', 'Queries Served']];
-    Object.entries(dnsStatistics.QueriesServedChart).forEach(([date, value]) => {
-      const formattedDate = format(new Date(date), 'MMM dd');
-      chartData.push([formattedDate, Number(value)]);
-    });
-    return chartData;
-  }, [dnsStatistics]);
-
-  const normalQueriesChartData = useMemo(() => {
-    if (!dnsStatistics || !dnsStatistics.NormalQueriesServedChart) return [];
-    const chartData = [['Date', 'Normal Queries']];
-    Object.entries(dnsStatistics.NormalQueriesServedChart).forEach(([date, value]) => {
-      const formattedDate = format(new Date(date), 'MMM dd');
-      chartData.push([formattedDate, Number(value)]);
-    });
-    return chartData;
-  }, [dnsStatistics]);
-
-  const queriesByTypeChartData = useMemo(() => {
-    if (!dnsStatistics || !dnsStatistics.QueriesByTypeChart) return [];
-    
-    // DNS record type mapping
-    const dnsTypeMap = {
-      '1': 'A',
-      '2': 'NS',
-      '5': 'CNAME',
-      '6': 'SOA',
-      '12': 'PTR',
-      '15': 'MX',
-      '16': 'TXT',
-      '28': 'AAAA',
-      '33': 'SRV',
-      '48': 'DNSKEY',
-      '65': 'HTTPS',
-      '99': 'SPF',
-      '255': 'ANY',
-      '257': 'CAA'
-    };
-    
-    const chartData = [['Type', 'Queries']];
-    Object.entries(dnsStatistics.QueriesByTypeChart).forEach(([type, value]) => {
-      const typeName = dnsTypeMap[type] || `Type ${type}`;
-      chartData.push([typeName, Number(value)]);
-    });
-    return chartData;
-  }, [dnsStatistics]);
-
-  // Check for dark mode
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  useEffect(() => {
-    const checkDarkMode = () => {
-      setIsDarkMode(document.documentElement.classList.contains('dark'));
-    };
-    checkDarkMode();
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-    return () => observer.disconnect();
   }, []);
 
   return (
@@ -585,185 +308,21 @@ const DNSManagementPage = ({ onboardingStep }) => {
             </div>
           </div>
 
-          {/* DNS Statistics */}
+          {/* DNS Statistics — free tier: static placeholder (no chart library) */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
               {t('dns.statistics', { defaultValue: 'DNS Statistics' })}
             </h2>
-            <div className="space-y-6">
-              {/* Total Queries Card */}
-              {dnsStatistics && (
-                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('dns.totalQueriesServed', { defaultValue: 'Total Queries Served' })}</p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
-                        {dnsStatistics.TotalQueriesServed?.toLocaleString() || 0}
-                      </p>
-                    </div>
-                    <div className="relative" ref={dnsDatePickerRef}>
-                      <button
-                        disabled
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowDnsDatePicker(!showDnsDatePicker);
-                        }}
-                        className={`p-2 rounded focus:outline-none transition-colors cursor-not-allowed opacity-60 ${
-                          dnsStartDate && dnsEndDate ? 'text-gray-400 dark:text-gray-500' : 'text-gray-400 dark:text-gray-500'
-                        }`}
-                        title={t('dns.premiumFeature', { defaultValue: 'Premium Feature' })}
-                      >
-                        <CalendarSearch size={20} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Charts */}
-              {isLoadingStats ? (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 flex items-center justify-center h-64">
-                  <div className="text-center">
-                    <Activity className="mx-auto mb-2 opacity-50 animate-pulse" />
-                    <div className="text-gray-500 dark:text-gray-400">{t('dns.loadingStatistics', { defaultValue: 'Loading statistics...' })}</div>
-                  </div>
-                </div>
-              ) : dnsStatistics ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Queries Served Chart */}
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
-                      {t('dns.queriesServed', { defaultValue: 'Queries Served Over Time' })}
-                    </h3>
-                    {queriesServedChartData.length > 1 ? (
-                      <Chart
-                        chartType="AreaChart"
-                        data={queriesServedChartData}
-                        options={{
-                          chartArea: { left: 60, top: 20, right: 20, bottom: 50, width: '100%', height: '85%' },
-                          hAxis: {
-                            title: t('dns.date', { defaultValue: 'Date' }),
-                            textStyle: { color: isDarkMode ? '#9ca3af' : '#6b7280', fontSize: 11 },
-                            titleTextStyle: { color: isDarkMode ? '#e5e7eb' : '#374151', fontSize: 12, bold: true }
-                          },
-                          vAxis: {
-                            title: t('dns.queries', { defaultValue: 'Queries' }),
-                            textStyle: { color: isDarkMode ? '#9ca3af' : '#6b7280', fontSize: 11 },
-                            titleTextStyle: { color: isDarkMode ? '#e5e7eb' : '#374151', fontSize: 12, bold: true },
-                            format: 'short'
-                          },
-                          legend: { position: 'none' },
-                          colors: ['#6366f1'],
-                          lineWidth: 2,
-                          pointSize: 2,
-                          backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-                          curveType: 'function',
-                          areaOpacity: 1,
-                          enableInteractivity: true,
-                          tooltip: { trigger: 'focus' }
-                        }}
-                        width="100%"
-                        height="300px"
-                        loader={<div className="text-gray-500 dark:text-gray-400">{t('dns.loadingChart', { defaultValue: 'Loading chart...' })}</div>}
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-                        {t('dns.noData', { defaultValue: 'No data available' })}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Normal Queries Chart */}
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
-                      {t('dns.normalQueries', { defaultValue: 'Normal Queries Over Time' })}
-                    </h3>
-                    {normalQueriesChartData.length > 1 ? (
-                      <Chart
-                        chartType="AreaChart"
-                        data={normalQueriesChartData}
-                        options={{
-                          chartArea: { left: 60, top: 20, right: 20, bottom: 50, width: '100%', height: '85%' },
-                          hAxis: {
-                            title: t('dns.date', { defaultValue: 'Date' }),
-                            textStyle: { color: isDarkMode ? '#9ca3af' : '#6b7280', fontSize: 11 },
-                            titleTextStyle: { color: isDarkMode ? '#e5e7eb' : '#374151', fontSize: 12, bold: true }
-                          },
-                          vAxis: {
-                            title: t('dns.queries', { defaultValue: 'Queries' }),
-                            textStyle: { color: isDarkMode ? '#9ca3af' : '#6b7280', fontSize: 11 },
-                            titleTextStyle: { color: isDarkMode ? '#e5e7eb' : '#374151', fontSize: 12, bold: true },
-                            format: 'short'
-                          },
-                          legend: { position: 'none' },
-                          colors: ['#10b981'],
-                          lineWidth: 2,
-                          pointSize: 2,
-                          backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-                          curveType: 'function',
-                          areaOpacity: 1,
-                          enableInteractivity: true,
-                          tooltip: { trigger: 'focus' }
-                        }}
-                        width="100%"
-                        height="300px"
-                        loader={<div className="text-gray-500 dark:text-gray-400">{t('dns.loadingChart', { defaultValue: 'Loading chart...' })}</div>}
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-                        {t('dns.noData', { defaultValue: 'No data available' })}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Queries by Type Chart */}
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 lg:col-span-2">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
-                      {t('dns.queriesByType', { defaultValue: 'Queries by DNS Record Type' })}
-                    </h3>
-                    {queriesByTypeChartData.length > 1 ? (
-                      <Chart
-                        chartType="BarChart"
-                        data={queriesByTypeChartData}
-                        options={{
-                          chartArea: { left: 80, top: 20, right: 20, bottom: 50, width: '100%', height: '85%' },
-                          hAxis: {
-                            title: t('dns.queries', { defaultValue: 'Queries' }),
-                            textStyle: { color: isDarkMode ? '#9ca3af' : '#6b7280', fontSize: 11 },
-                            titleTextStyle: { color: isDarkMode ? '#e5e7eb' : '#374151', fontSize: 12, bold: true },
-                            format: 'short'
-                          },
-                          vAxis: {
-                            title: t('dns.recordType', { defaultValue: 'Record Type' }),
-                            textStyle: { color: isDarkMode ? '#9ca3af' : '#6b7280', fontSize: 11 },
-                            titleTextStyle: { color: isDarkMode ? '#e5e7eb' : '#374151', fontSize: 12, bold: true }
-                          },
-                          legend: { position: 'none' },
-                          colors: ['#f59e0b'],
-                          backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-                          enableInteractivity: true,
-                          tooltip: { trigger: 'focus' }
-                        }}
-                        width="100%"
-                        height="400px"
-                        loader={<div className="text-gray-500 dark:text-gray-400">{t('dns.loadingChart', { defaultValue: 'Loading chart...' })}</div>}
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-                        {t('dns.noData', { defaultValue: 'No data available' })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 flex items-center justify-center h-64">
-                  <div className="text-center text-gray-500 dark:text-gray-400">
-                    <BarChart3 className="mx-auto mb-2 opacity-50" />
-                    <div>{t('dns.noStatistics', { defaultValue: 'No statistics available' })}</div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <section
+              aria-label={t('dns.statistics', { defaultValue: 'DNS Statistics' })}
+              className="phguard-placeholder-panel flex min-h-[16rem] flex-col items-center justify-center px-6 py-12 text-center"
+            >
+              <BarChart3 className="mb-3 h-10 w-10 text-gray-500 opacity-80 dark:text-gray-400" aria-hidden />
+              <p className="font-medium text-gray-800 dark:text-gray-100">{t('dns.noStatistics', { defaultValue: 'No statistics available' })}</p>
+              <p className="phguard-placeholder-desc mt-2 max-w-md text-sm text-gray-600 dark:text-gray-300">
+                {t('dns.dnsStatsPremium', { defaultValue: 'DNS query statistics and charts are available in PhantomGuard Pro.' })}
+              </p>
+            </section>
           </div>
         </div>
       )}
@@ -808,26 +367,88 @@ const DNSManagementPage = ({ onboardingStep }) => {
             </div>
           ) : (
             <div className="relative">
-              <div className="ag-theme-alpine  pointer-events-none" style={{ height: '500px', width: '100%' }}>
-                <AgGridReact
-                  rowData={filteredRecords}
-                  columnDefs={columnDefs}
-                  defaultColDef={defaultColDef}
-                  pagination={false}
-                  suppressCellFocus={true}
-                  suppressRowClickSelection={true}
-                  suppressNoRowsOverlay={true}
-                  domLayout="normal"
-                  getRowId={(params) => params.data.id}
-                  onCellClicked={(params) => {
-                    // Close menu if clicking outside action column
-                    if (params.column?.getColId() !== 'actions' && actionMenuOpen) {
-                      setActionMenuOpen(null);
-                    }
-                  }}
-                />
+              <div
+                className="pointer-events-none max-h-[500px] w-full overflow-auto rounded border border-gray-200 dark:border-gray-700"
+                style={{ minHeight: '500px' }}
+              >
+                <table className="min-w-full border-collapse text-left text-sm">
+                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-100 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                    <tr>
+                      <th className="w-[100px] px-3 py-2 text-center font-semibold">{t('dns.type', { defaultValue: 'TYPE' })}</th>
+                      <th className="min-w-[150px] px-3 py-2 font-semibold">{t('dns.name', { defaultValue: 'NAME' })}</th>
+                      <th className="min-w-[120px] px-3 py-2 font-semibold">{t('dns.value', { defaultValue: 'VALUE' })}</th>
+                      <th className="w-[100px] px-3 py-2 font-semibold">{t('dns.weight', { defaultValue: 'WEIGHT' })}</th>
+                      <th className="w-[100px] px-3 py-2 text-center font-semibold">{t('dns.ttl', { defaultValue: 'TTL' })}</th>
+                      <th className="min-w-[180px] px-3 py-2 text-center font-semibold">
+                        {t('dns.cdnAcceleration', { defaultValue: 'CDN ACCELERATION' })}
+                      </th>
+                      <th className="w-[50px] px-1 py-2" aria-label="Actions" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                    {filteredRecords.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-3 py-8 text-center text-gray-500 dark:text-gray-400">
+                          {t('dns.noRecords', { defaultValue: 'No DNS records.' })}
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredRecords.map((record) => {
+                        const typeStr = getDnsTypeString(record.type);
+                        const rawName = record.name && String(record.name).trim() ? record.name : '';
+                        const displayName = rawName || domainName;
+                        const truncatedName = displayName.length > 30 ? `${displayName.substring(0, 27)}...` : displayName;
+                        const weightDisplay = record.weight != null && record.weight !== '' ? record.weight : '-';
+                        return (
+                          <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/80">
+                            <td className="px-3 py-2 text-center align-middle">
+                              <span className="inline-flex rounded-full border border-red-300 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                                {typeStr}
+                              </span>
+                            </td>
+                            <td className="max-w-[min(40vw,20rem)] px-3 py-2 align-middle">
+                              <span className="text-sm text-gray-900 dark:text-gray-100" title={displayName}>
+                                {truncatedName}
+                              </span>
+                            </td>
+                            <td className="max-w-[min(40vw,24rem)] break-words px-3 py-2 align-middle text-gray-900 dark:text-gray-100">
+                              {record.value != null ? String(record.value) : ''}
+                            </td>
+                            <td className="px-3 py-2 align-middle text-gray-800 dark:text-gray-200">{weightDisplay}</td>
+                            <td className="px-3 py-2 text-center align-middle">
+                              <span className="inline-flex rounded-full border border-orange-300 bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700 dark:border-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
+                                {record.ttl != null ? String(record.ttl) : '-'}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-center align-middle">
+                              {!record.cdnAcceleration ? (
+                                '-'
+                              ) : (
+                                <div className="flex items-center justify-center gap-2">
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-green-300 bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+                                    <Zap className="h-3 w-3" />
+                                    {t('dns.enabled', { defaultValue: 'Enabled' })}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    disabled
+                                    className="cursor-not-allowed opacity-60 text-gray-400 dark:text-gray-500"
+                                    title={t('dns.cdnSettings', { defaultValue: 'CDN Settings' })}
+                                  >
+                                    <Settings className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-1 py-2 text-center align-middle">{renderDnsActionsCell(record)}</td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
-              <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80  rounded-lg z-10">
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/80 dark:bg-gray-900/80 z-10">
                 <div className="text-center p-6" style={{ filter: 'none' }}>
                   <div className="flex justify-center mb-3">
                     <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-full">

@@ -1,12 +1,8 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
-import { AgGridReact } from 'ag-grid-react';
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
 import RestoreButton from './RestoreButton';
-import { RotateCcw, X, HelpCircle } from 'lucide-react';
-import pako from 'pako';
+import { X, HelpCircle } from 'lucide-react';
 
 const InfectedFilesTable = ({ files, formatDateTime, restoreFile }) => {
   const { t } = useTranslation();
@@ -16,7 +12,6 @@ const InfectedFilesTable = ({ files, formatDateTime, restoreFile }) => {
   const [modalFileName, setModalFileName] = useState('');
   const [modalFileData, setModalFileData] = useState(null);
   const [tooltipState, setTooltipState] = useState({ show: false, text: '', x: 0, y: 0 });
-  const tooltipRef = useRef(null);
 
   const renderHighlightedContent = (content, fileData) => {
     if (!content || !fileData) {
@@ -52,20 +47,6 @@ const InfectedFilesTable = ({ files, formatDateTime, restoreFile }) => {
     );
   };
 
-  const decodeBase64Content = (base64Content) => {
-    if (!base64Content) {
-      return '';
-    }
-
-    const binary = window.atob(base64Content);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i += 1) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-
-    return pako.ungzip(bytes, { to: 'string' });
-  };
-
   const handleFileClick = async (file) => {
     if (!file.file_hash) {
       return;
@@ -84,195 +65,190 @@ const InfectedFilesTable = ({ files, formatDateTime, restoreFile }) => {
     setModalFileName('');
     setModalFileData(null);
   };
-  
-  const columnDefs = useMemo(() => [
-    {
-      field: 'file_name',
-      headerName: t('components.infectedFiles.filePath'),
-      flex: 1,
-      minWidth: 150,
-      suppressMenu: true,
-      sortable: true,
-      cellRenderer: (params) => {
-        const file = params.data;
-        const fullPath = (file.dir_path ? file.dir_path + '/' : '/') + (file.file_name || '');
-        const truncated = fullPath.length > 60 ? fullPath.substring(0, 57) + '...' : fullPath;
-        return (
-          <span 
-            title={fullPath}
-            onClick={() => handleFileClick(file)}
-            className="cursor-pointer text-indigo-600 dark:text-indigo-400 hover:underline"
-          >
-            {truncated}
-          </span>
-        );
-      },
-    },
-    {
-      field: 'file_hash',
-      headerName: t('components.infectedFiles.hash'),
-      minWidth: 120,
-      maxWidth: 180,
-      suppressMenu: true,
-      sortable: true,
-      cellRenderer: (params) => {
-        const hash = params.value || '';
-        return <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded break-all text-gray-900 dark:text-gray-100">{hash}</code>;
-      },
-    },
-    {
-      field: 'scan_result',
-      headerName: t('components.infectedFiles.result'),
-      width: 120,
-      suppressMenu: true,
-      sortable: true,
-      cellStyle: { display: 'flex', justifyContent: 'center', alignItems: 'center' },
-      cellRenderer: (params) => {
-        const result = Number(params.value);
-        const isMalicious = result === 2;
-        const isSuspicious = result === 6;
-        const isRestored = result === 7;
-        const isNotQuarantined = Number(params.data.quarantine) === 0;
-        return (
-          <div className="flex items-center gap-1 justify-center">
-            <span className={`px-2 py-1 text-xs font-medium rounded whitespace-nowrap ${
-              isRestored
-                ? 'bg-green-600 text-white'
-                : isMalicious
+
+  const renderResultCell = (file) => {
+    const result = Number(file.scan_result);
+    const isMalicious = result === 2;
+    const isSuspicious = result === 6;
+    const isRestored = result === 7;
+    const isNotQuarantined = Number(file.quarantine) === 0;
+
+    return (
+      <div className="flex items-center gap-1 justify-center">
+        <span
+          className={`px-2 py-1 text-xs font-medium rounded whitespace-nowrap ${
+            isRestored
+              ? 'bg-green-600 text-white'
+              : isMalicious
                 ? 'bg-red-600 text-white'
                 : isSuspicious
-                ? 'bg-orange-600 text-white'
-                : 'bg-amber-600 text-white'
-              }`}>
-              {isRestored ? t('scanner.restored') : isMalicious ? t('scanner.malicious') : isSuspicious ? t('scanner.suspicious') : t('scanner.injected')}
-            </span>
-            {isNotQuarantined && (
-              <div 
-                className="relative inline-block flex-shrink-0"
-                onMouseEnter={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  setTooltipState({
-                    show: true,
-                    text: t('components.infectedFiles.notQuarantined', { defaultValue: 'File was not quarantined successfully' }),
-                    x: rect.right,
-                    y: rect.top - 5
-                  });
-                }}
-                onMouseLeave={() => {
-                  setTooltipState({ show: false, text: '', x: 0, y: 0 });
-                }}
-              >
-                <HelpCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400 cursor-help" />
-              </div>
-            )}
+                  ? 'bg-orange-600 text-white'
+                  : 'bg-amber-600 text-white'
+          }`}
+        >
+          {isRestored
+            ? t('scanner.restored')
+            : isMalicious
+              ? t('scanner.malicious')
+              : isSuspicious
+                ? t('scanner.suspicious')
+                : t('scanner.injected')}
+        </span>
+        {isNotQuarantined && (
+          <div
+            className="relative inline-block flex-shrink-0"
+            onMouseEnter={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setTooltipState({
+                show: true,
+                text: t('components.infectedFiles.notQuarantined', { defaultValue: 'File was not quarantined successfully' }),
+                x: rect.right,
+                y: rect.top - 5,
+              });
+            }}
+            onMouseLeave={() => {
+              setTooltipState({ show: false, text: '', x: 0, y: 0 });
+            }}
+          >
+            <HelpCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400 cursor-help" />
           </div>
-        );
-      },
-    },
-    {
-      field: 'created_at',
-      headerName: t('components.infectedFiles.detected'),
-      minWidth: 140,
-      maxWidth: 170,
-      suppressMenu: true,
-      sortable: true,
-      valueFormatter: (params) => formatDateTime(params.value),
-    },
-    {
-      field: 'actions',
-      headerName: t('components.infectedFiles.actions'),
-      width: 110,
-      suppressMenu: true,
-      sortable: false,
-      cellStyle: { display: 'flex', justifyContent: 'center', alignItems: 'center' },
-      cellRenderer: (params) => {
-        const scanResult = Number(params.data.scan_result);
-        const isRestored = scanResult === 7;
-        const isSuspicious = scanResult === 6;
-        if (isRestored || isSuspicious) {
-          return null;
-        }
-        return <RestoreButton file={params.data} restoreFile={restoreFile} />;
-      },
-    },
-  ], [formatDateTime, restoreFile, t]);
+        )}
+      </div>
+    );
+  };
 
-  const defaultColDef = useMemo(() => ({
-    resizable: true,
-    filter: true,
-  }), []);
+  const renderActionsCell = (file) => {
+    const scanResult = Number(file.scan_result);
+    const isRestored = scanResult === 7;
+    const isSuspicious = scanResult === 6;
+    if (isRestored || isSuspicious) {
+      return null;
+    }
+    return <RestoreButton file={file} restoreFile={restoreFile} />;
+  };
 
+  const list = Array.isArray(files) ? files : [];
 
   return (
     <>
-      <div className="ag-theme-alpine" style={{ height: '500px', width: '100%' }}>
-        <AgGridReact
-          rowData={files}
-          columnDefs={columnDefs}
-          defaultColDef={defaultColDef}
-          pagination={false}
-          suppressCellFocus={true}
-          domLayout="normal"
-        />
+      <div className="max-h-[500px] w-full overflow-auto rounded border border-gray-200 dark:border-gray-700">
+        <table className="min-w-full border-collapse text-left text-sm">
+          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-100 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+            <tr>
+              <th className="px-3 py-2 font-semibold">{t('components.infectedFiles.filePath')}</th>
+              <th className="px-3 py-2 font-semibold">{t('components.infectedFiles.hash')}</th>
+              <th className="w-[120px] px-3 py-2 text-center font-semibold">{t('components.infectedFiles.result')}</th>
+              <th className="min-w-[140px] max-w-[170px] px-3 py-2 font-semibold">{t('components.infectedFiles.detected')}</th>
+              <th className="w-[110px] px-3 py-2 text-center font-semibold">{t('components.infectedFiles.actions')}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+            {list.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-3 py-8 text-center text-gray-500 dark:text-gray-400">
+                  {t('components.infectedFiles.noFiles', { defaultValue: 'No infected files.' })}
+                </td>
+              </tr>
+            ) : (
+              list.map((file, index) => {
+                const fullPath = (file.dir_path ? file.dir_path + '/' : '/') + (file.file_name || '');
+                const truncated = fullPath.length > 60 ? `${fullPath.substring(0, 57)}...` : fullPath;
+                const hash = file.file_hash || '';
+
+                return (
+                  <tr key={file.file_hash || `${file.file_name}-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-800/80">
+                    <td className="max-w-[min(40vw,28rem)] px-3 py-2 align-middle">
+                      <span
+                        role={file.file_hash ? 'button' : undefined}
+                        tabIndex={file.file_hash ? 0 : undefined}
+                        title={fullPath}
+                        onClick={() => handleFileClick(file)}
+                        onKeyDown={(e) => {
+                          if (file.file_hash && (e.key === 'Enter' || e.key === ' ')) {
+                            e.preventDefault();
+                            handleFileClick(file);
+                          }
+                        }}
+                        className={
+                          file.file_hash
+                            ? 'cursor-pointer text-indigo-600 hover:underline dark:text-indigo-400'
+                            : 'text-gray-700 dark:text-gray-300'
+                        }
+                      >
+                        {truncated}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 align-middle">
+                      <code className="break-all rounded bg-gray-100 px-1 py-0.5 text-xs text-gray-900 dark:bg-gray-700 dark:text-gray-100">
+                        {hash}
+                      </code>
+                    </td>
+                    <td className="px-3 py-2 align-middle">{renderResultCell(file)}</td>
+                    <td className="whitespace-nowrap px-3 py-2 align-middle text-gray-800 dark:text-gray-200">
+                      {formatDateTime(file.created_at)}
+                    </td>
+                    <td className="px-3 py-2 text-center align-middle">{renderActionsCell(file)}</td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* Tooltip Portal */}
-      {tooltipState.show && createPortal(
-        <div
-          ref={tooltipRef}
-          className="fixed w-48 p-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded shadow-lg z-[9999] pointer-events-none whitespace-normal"
-          style={{
-            left: `${tooltipState.x}px`,
-            top: `${tooltipState.y}px`,
-            transform: 'translateX(-100%)',
-            marginTop: '-5px',
-          }}
-        >
-          {tooltipState.text}
-        </div>,
-        document.body
-      )}
+      {tooltipState.show &&
+        createPortal(
+          <div
+            className="pointer-events-none fixed z-[9999] w-48 whitespace-normal rounded bg-gray-900 p-2 text-xs text-white shadow-lg dark:bg-gray-700"
+            style={{
+              left: `${tooltipState.x}px`,
+              top: `${tooltipState.y}px`,
+              transform: 'translateX(-100%)',
+              marginTop: '-5px',
+            }}
+          >
+            {tooltipState.text}
+          </div>,
+          document.body,
+        )}
 
-      {/* File Content Modal */}
       {(modalContent !== null || modalLoading || modalError) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-70">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full mx-4 p-6 max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-black dark:text-gray-100 truncate flex-1 mr-4" title={modalFileName}>
+          <div className="mx-4 flex max-h-[90vh] w-full max-w-4xl flex-col rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="mr-4 flex-1 truncate text-lg font-semibold text-black dark:text-gray-100" title={modalFileName}>
                 {modalFileName}
               </h3>
               <button
+                type="button"
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
+                className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-auto border border-gray-200 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-900">
+            <div className="flex-1 overflow-auto rounded border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
               {modalLoading && (
                 <div className="p-8 text-center text-gray-600 dark:text-gray-400">
                   {t('components.infectedFiles.loading', { defaultValue: 'Loading file content...' })}
                 </div>
               )}
               {modalError && (
-                <div className="p-8 text-center text-red-600 dark:text-red-400">
-                  {modalError}
-                </div>
+                <div className="p-8 text-center text-red-600 dark:text-red-400">{modalError}</div>
               )}
               {modalContent && (
-                <div className="p-4 text-sm font-mono text-gray-800 dark:text-gray-200">
-                  <code>
-                    {renderHighlightedContent(modalContent, modalFileData)}
-                  </code>
+                <div className="p-4 font-mono text-sm text-gray-800 dark:text-gray-200">
+                  <code>{renderHighlightedContent(modalContent, modalFileData)}</code>
                 </div>
               )}
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
+            <div className="mt-4 flex justify-end border-t border-gray-200 pt-4 dark:border-gray-700">
               <button
+                type="button"
                 onClick={closeModal}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
                 {t('common.close', { defaultValue: 'Close' })}
               </button>
@@ -285,4 +261,3 @@ const InfectedFilesTable = ({ files, formatDateTime, restoreFile }) => {
 };
 
 export default InfectedFilesTable;
-

@@ -105,7 +105,6 @@ phantom-guard/
 | Google Fonts | PhantomGuard | Mulish font for admin UI |
 | BitNinja API | Pro | Malware scanning |
 | GoQR | Pro | 2FA QR code generation |
-| Google Charts | Pro | Traffic/geo charts |
 | IPify | Pro | IP detection |
 | WordPress.org | Pro | Plugin/theme version checks |
 

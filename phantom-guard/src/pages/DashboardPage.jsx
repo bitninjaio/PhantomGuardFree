@@ -1,7 +1,6 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Shield, AlertTriangle, Lock, Clock, Zap } from 'lucide-react';
-import { toast } from 'sonner';
 import { useConfirm } from '../hooks/useConfirm';
 import { useHistory } from '../hooks/useHistory';
 import { useHardening } from '../hooks/useHardening';
@@ -17,105 +16,24 @@ const DashboardPage = ({ onNavigate, onboardingStep }) => {
   const { ConfirmDialog } = useConfirm();
   const { loadHistory, loadInfectedFiles, scanTotal, infectedTotal, scanMeta } = useHistory();
   const { rules: hardeningRules, preset: hardeningPreset, isLoading: hardeningLoading } = useHardening();
-  const [geoChartData, setGeoChartData] = useState([]);
-  const [originTrafficChartData, setOriginTrafficChartData] = useState([]);
   const [cacheHitRate, setCacheHitRate] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [nextScanInfo, setNextScanInfo] = useState({ value: PRO_FEATURE_LABEL, enabled: false });
-  const [bunnyStatsError, setBunnyStatsError] = useState(PRO_FEATURE_LABEL);
-  const [bunnyStatsLoaded, setBunnyStatsLoaded] = useState(true);
-
-  useEffect(() => {
-    const checkDarkMode = () => {
-      setIsDarkMode(document.documentElement.classList.contains('dark'));
-    };
-    checkDarkMode();
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-    return () => observer.disconnect();
-  }, []);
 
   const [expandedChart, setExpandedChart] = useState(null);
-  const mapChartRef = React.useRef(null);
-  const trafficChartRef = React.useRef(null);
   const mapContainerRef = React.useRef(null);
   const trafficContainerRef = React.useRef(null);
   const isTransitioningRef = React.useRef(false);
   const pendingResizeRef = React.useRef(false);
   const transitionTimeoutRef = React.useRef(null);
 
-  const [bunnyStartDate, setBunnyStartDate] = useState('');
-  const [bunnyEndDate, setBunnyEndDate] = useState('');
-  const [showBunnyDatePicker, setShowBunnyDatePicker] = useState(false);
-  const getLast30DaysRange = () => {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30);
-    return { startDate, endDate, key: 'selection' };
-  };
-  const [bunnyDateRange, setBunnyDateRange] = useState([getLast30DaysRange()]);
-  const bunnyDatePickerRef = useRef(null);
-
   React.useEffect(() => {
     loadHistory(1, 10);
     loadInfectedFiles(1, 6);
   }, [loadHistory, loadInfectedFiles]);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (bunnyDatePickerRef.current && !bunnyDatePickerRef.current.contains(event.target)) {
-        setShowBunnyDatePicker(false);
-      }
-    };
-    if (showBunnyDatePicker) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showBunnyDatePicker]);
-
-  const handleBunnyDateRangeChange = (item) => {
-    setBunnyDateRange([item.selection]);
-  };
-
-  const applyBunnyDateRange = () => {
-    const start = bunnyDateRange[0].startDate;
-    const end = bunnyDateRange[0].endDate;
-    const startDate = new Date(start);
-    startDate.setHours(0, 0, 0, 0);
-    const endDate = new Date(end);
-    endDate.setHours(23, 59, 59, 999);
-    const formatDateForAPI = (date) => {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      const h = String(date.getHours()).padStart(2, '0');
-      const min = String(date.getMinutes()).padStart(2, '0');
-      const s = String(date.getSeconds()).padStart(2, '0');
-      return `${y}-${m}-${d}T${h}:${min}:${s}Z`;
-    };
-    setBunnyStartDate(formatDateForAPI(startDate));
-    setBunnyEndDate(formatDateForAPI(endDate));
-    setShowBunnyDatePicker(false);
-  };
-
-  const clearBunnyDateFilter = () => {
-    setBunnyStartDate('');
-    setBunnyEndDate('');
-    setBunnyDateRange([getLast30DaysRange()]);
-    setShowBunnyDatePicker(false);
-  };
-
   const resizeCharts = () => {
     requestAnimationFrame(() => {
-      if (mapChartRef.current) {
-        try { mapChartRef.current.draw(); } catch (e) { window.dispatchEvent(new Event('resize')); }
-      }
-      if (trafficChartRef.current) {
-        try { trafficChartRef.current.draw(); } catch (e) { window.dispatchEvent(new Event('resize')); }
-      }
+      window.dispatchEvent(new Event('resize'));
     });
   };
 
@@ -164,7 +82,7 @@ const DashboardPage = ({ onNavigate, onboardingStep }) => {
       if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
       containers.forEach(c => c.removeEventListener('transitionend', handleTransitionEnd));
     };
-  }, [geoChartData.length, originTrafficChartData.length]);
+  }, []);
 
   const totalScans = scanTotal || scanMeta?.total || 0;
   const totalMalware = infectedTotal || 0;
@@ -284,36 +202,15 @@ const DashboardPage = ({ onNavigate, onboardingStep }) => {
 
       <div className="flex flex-wrap gap-6">
         <GeoTrafficChart
-          geoChartData={geoChartData}
-          isDarkMode={isDarkMode}
           containerRef={mapContainerRef}
           expandedChart={expandedChart}
-          mapChartRef={mapChartRef}
           onToggleExpand={handleToggleMapExpand}
-          hasError={!!bunnyStatsError}
-          isLoaded={bunnyStatsLoaded}
-          premiumLabel={PRO_FEATURE_LABEL}
         />
 
         <OriginTrafficChart
-          originTrafficChartData={originTrafficChartData}
-          isDarkMode={isDarkMode}
           containerRef={trafficContainerRef}
           expandedChart={expandedChart}
-          trafficChartRef={trafficChartRef}
-          bunnyStartDate={bunnyStartDate}
-          bunnyEndDate={bunnyEndDate}
-          bunnyDateRange={bunnyDateRange}
-          onBunnyDateRangeChange={handleBunnyDateRangeChange}
-          onApplyBunnyDateRange={applyBunnyDateRange}
-          onClearBunnyDateFilter={clearBunnyDateFilter}
-          showBunnyDatePicker={showBunnyDatePicker}
-          setShowBunnyDatePicker={setShowBunnyDatePicker}
-          bunnyDatePickerRef={bunnyDatePickerRef}
           onToggleExpand={handleToggleTrafficExpand}
-          hasError={!!bunnyStatsError}
-          isLoaded={bunnyStatsLoaded}
-          premiumLabel={PRO_FEATURE_LABEL}
         />
       </div>
     </div>

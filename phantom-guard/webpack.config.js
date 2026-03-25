@@ -62,13 +62,11 @@ module.exports = {
   ],
   resolve: {
     extensions: ['.js', '.jsx'],
-    // Ensure proper module resolution for ag-grid and other ESM packages
     fullySpecified: false,
     mainFields: ['browser', 'module', 'main']
   },
   externals: {
     // React and ReactDOM are bundled since WordPress doesn't provide them globally
-    // This ensures ag-grid's version checks work correctly
   },
   optimization: {
     minimizer: [
