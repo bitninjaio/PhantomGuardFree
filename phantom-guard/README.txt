@@ -1,167 +1,130 @@
 === PhantomGuard ===
 Contributors: phantomguard
-Requires at least: 6.8
+Requires at least: 6.5
 Tested up to: 6.9
 Stable tag: 1.0.0
 Requires PHP: 7.4
 License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-3.0.html
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-PhantomGuard provides WordPress security hardening with a React-based admin UI.
-Malware scanning and advanced features require PhantomGuard Pro.
-
-== Source Code ==
-The admin UI uses React and webpack; the distributed assets (assets/js/*.js, assets/css/*.css) are minified. The full, human-readable source code is available at:
-https://github.com/bitninjaio/PhantomGuardFree
-
-To build from source: npm install && npm run build (or npm run build:dev for unminified output). See README.md for details.
+WordPress hardening: presets, audit log, modern UI. Free core rules; Pro adds scanning & CDN/DNS.
 
 == Description ==
-PhantomGuard provides essential WordPress security hardening with a
-modern React-based admin interface. Protect your site with configurable
-security rules, audit logging, and presets. Upgrade to PhantomGuard Pro for
-malware scanning, DNS management, and additional hardening options.
 
-== Terms & Privacy ==
-By using PhantomGuard, you agree to:
-- Terms of Service: https://phantomguard.io/terms
-- Privacy Policy: https://phantomguard.io/privacy
+**PhantomGuard** helps you harden WordPress without editing code by hand. Pick a preset (Basic, Recommended, or Advanced), turn rules on or off, and review activity in the audit log—all from a modern admin interface.
 
-== Highlights ==
-– Security hardening with Basic, Recommended, and Advanced presets
-– Four functional rules: Force HTTPS for admin, Hide WP version, Audit logging, Obscure login feedback
-– React admin app with i18n support (English, German, Italian)
-– Dashboard overview and onboarding flow
-– Settings and Support pages
-– License key configuration (Pro features require valid license)
+**What you get in the free version**
 
-== Structure ==
-– phantom-guard.php: Plugin bootstrap
-– includes/: Core classes, hardening rules
-– admin/: WP admin integration and AJAX
-– public/: Public-facing hooks
-– src/: React admin app source
-– assets/: Built JS/CSS
-– webpack.config.js: Frontend build config
+* **Security presets** — Start with Basic, Recommended, or Advanced and adjust as needed.
+* **Core hardening rules** — Force HTTPS for the admin area, hide the WordPress version, enable audit logging, and obscure login feedback to reduce information leaks.
+* **Clear dashboard** — Overview, onboarding, settings, and support in one place.
+* **Translations** — Admin UI available in English, German, and Italian.
 
-== Requirements ==
-– WordPress
-– PHP 7.4+
-– Node.js + npm (for building the admin UI)
+**PhantomGuard Pro** (optional license) adds malware scanning, extended hardening rules, DNS/CDN management, traffic analytics, and more. You can enter a license key in the plugin when you’re ready.
 
-== Setup (Dev) ==
-cd phantom-guard
-npm install
-npm run build:dev  (or: npm run build / npm run dev)
+**Legal**
 
-== Usage ==
-WordPress Admin -> PhantomGuard
+By using PhantomGuard you agree to our [Terms of Service](https://phantomguard.io/terms) and [Privacy Policy](https://phantomguard.io/privacy).
 
-== Configuration ==
-– includes/class-phantom-guard-config.php
+== Installation ==
 
-== Key Components ==
-– includes/class-phantom-guard.php
-– includes/hardening/
-– src/App.jsx
+1. Upload the plugin folder to `/wp-content/plugins/`, or install **PhantomGuard** from the WordPress.org plugin directory.
+2. Activate the plugin through the **Plugins** screen in WordPress.
+3. Open **PhantomGuard** in the admin menu to configure hardening and explore the dashboard.
 
-== Premium Features (PhantomGuard Pro) ==
-
-The following features are available in PhantomGuard Pro and require a valid license:
-
-= Malware Scanning =
-* Two-phase malware scanning with background processing
-* Manual and scheduled scans
-* Quarantine, restore, and file cleanup workflows
-* File content preview for infected files
-* Scan history and results
-
-= Security Hardening (Extended) =
-* Advanced hardening rules: Disallow file edit, Disallow file mods
-* XML-RPC and REST API disable options
-* Rename admin/login URL
-* Disable WP-Cron
-* Restrict login by IP address
-* Two-Factor Authentication (2FA) with TOTP
-
-= DNS Management =
-* Bunny CDN integration
-* Pull Zone management
-* DNS record management
-* Free SSL certificate provisioning
-* Traffic and geo charts
-
-= Dashboard (Extended) =
-* Cache purge
-* Bunny CDN statistics
-* Next scheduled scan info
-* Traffic statistics
-
-== External Services ==
-
-PhantomGuard communicates with the following external services:
-
-= Google Fonts (fonts.googleapis.com) =
-* Function: Mulish font for the admin UI.
-* Data sent: None (font file request only; Google may log IP per their policy).
-* When: Loading PhantomGuard admin pages.
-* Terms: https://developers.google.com/fonts/faq
-* Privacy: https://policies.google.com/privacy
-
-PhantomGuard Pro additionally uses these services:
-
-= BitNinja API (api.bitninja.io) =
-* Function: Malware scanning, quarantine, license validation, settings, CDN/DNS management.
-* Data sent: File MD5 hashes, file content (for Phase 2 scan), license key, site domain, server IP address.
-* When: Manual scan, scheduled scan, file restore, license check, settings save, DNS/Pull Zone operations.
-* Terms: https://bitninja.com/terms-and-conditions/
-* Privacy: https://bitninja.com/privacy-policy/
-
-= GoQR API (api.qrserver.com) =
-* Function: 2FA QR code image generation for TOTP setup.
-* Data sent: OTP Auth URI (site name, username, TOTP secret) – encoded in URL only; no account data.
-* When: User enables Two-Factor Authentication in Security Hardening.
-* Terms: https://goqr.me/legal/tos-api.html
-* Privacy: https://goqr.me/privacy-safety-security/
-
-= IPify (api.ipify.org) =
-* Function: Detect server external IP for license validation.
-* Data sent: None (returns public IP only).
-* When: License validation.
-* Terms: https://geo.ipify.org/terms-of-service
-* Privacy: https://geo.ipify.org/privacy-policy
-
-= WordPress.org (api.wordpress.org, downloads.wordpress.org) =
-* Function: Core and plugin checksum verification for integrity checks.
-* Data sent: WordPress version, plugin slug.
-* When: Integrity verification during scan.
-* Terms: https://wordpress.com/tos/
-* Privacy: https://wordpress.org/about/privacy/
-
-= User Consent =
-License activation and malware scanning require a valid PhantomGuard license. By activating the license, you consent to the data flows described above. No additional opt-in is required for these core features.
+No extra configuration file is required for the free version—everything is managed in the plugin screens.
 
 == Frequently Asked Questions ==
-= Does this plugin require a BitNinja account? =
-A PhantomGuard license is required for malware scanning and advanced features. The free version provides security hardening without a license.
 
-= Does it run scans automatically? =
-Scans can be triggered manually or scheduled via the plugin settings. This feature requires PhantomGuard Pro.
+= Does the free version need a license? =
 
-= What security rules work in the free version? =
-Four rules are functional in the free version: Force HTTPS for admin, Hide WP version, Audit logging, and Obscure login feedback. Additional rules are available in PhantomGuard Pro.
+No. Hardening and the rules listed above work without a license. A PhantomGuard license is only required for Pro features such as malware scanning and advanced tools.
+
+= Where do I change security rules? =
+
+Go to **WordPress Admin → PhantomGuard** and use **Security Hardening** (and other tabs as labeled). Presets and individual rules are explained in the interface.
+
+= What about malware scanning and Pro features? =
+
+Those require **PhantomGuard Pro** and a valid license. The free plugin still shows where those features live so you can upgrade when you want full protection.
+
+= Does PhantomGuard replace my security plugin? =
+
+PhantomGuard focuses on **hardening and logging** in the free tier. Pro adds scanning and related tools. You can use it alongside other plugins if their features don’t overlap in a conflicting way.
 
 == Screenshots ==
-1. Dashboard overview
-2. Malware scanner and results (Pro)
-3. Security hardening rules
-4. DNS management (Pro)
-5. Settings
+
+1. Dashboard overview and stats (some areas show Pro features when unlocked)
+2. Malware scanner (Pro)
+3. Security hardening rules and presets
+4. CDN / DNS management (Pro)
+5. Settings and license
 
 == Changelog ==
+
 = 1.0.0 =
-* Initial release.
+* Initial release of PhantomGuard on WordPress.org.
 
 == Upgrade Notice ==
+
 = 1.0.0 =
-Initial release.
+First public release. Install and activate, then open PhantomGuard from the admin menu to get started.
+
+== Source code ==
+
+The admin area is built with **React** and **webpack**. The files shipped in this plugin (`assets/js/*.js`, `assets/css/*.css`) are minified for performance.
+
+**Full source code** (readable and forkable) is here:
+https://github.com/bitninjaio/PhantomGuardFree
+
+**Build from source (developers)**
+
+1. Clone the repository and `cd` into the plugin directory.
+2. Run `npm install`
+3. Run `npm run build` for production assets, or `npm run build:dev` / `npm run dev` for development builds.
+
+See **README.md** in the repository for more detail.
+
+== External services ==
+
+PhantomGuard loads **Google Fonts** (Mulish) for the admin UI. Loading fonts may involve a request to Google; see their terms and privacy policy linked below.
+
+**PhantomGuard Pro** may connect to additional services when you use a license (scanning, 2FA QR, license checks, CDN/DNS, etc.). Details:
+
+= Google Fonts (fonts.googleapis.com) =
+* **What it does:** Loads the Mulish font for the plugin’s admin screens.
+* **Data sent:** No site content—only font requests (Google may log IP per their policy).
+* **When:** While using PhantomGuard in the WordPress admin.
+* **Terms:** https://developers.google.com/fonts/faq
+* **Privacy:** https://policies.google.com/privacy
+
+= BitNinja API (api.bitninja.io) — Pro only =
+* **What it does:** Malware scanning, quarantine, license validation, and related Pro features.
+* **Data sent:** May include file hashes, file content for deep scans, license key, site domain, and server IP as needed for the feature you use.
+* **When:** While using Pro features that rely on the API.
+* **Terms:** https://bitninja.com/terms-and-conditions/
+* **Privacy:** https://bitninja.com/privacy-policy/
+
+= GoQR API (api.qrserver.com) — Pro only =
+* **What it does:** Generates QR codes for two-factor authentication setup.
+* **Data sent:** OTP Auth URI in the request URL only (no separate account with GoQR required for basic use).
+* **When:** Enabling 2FA in Pro hardening options.
+* **Terms:** https://goqr.me/legal/tos-api.html
+* **Privacy:** https://goqr.me/privacy-safety-security/
+
+= IPify (api.ipify.org) — Pro only =
+* **What it does:** Helps determine the server’s public IP for license validation.
+* **Data sent:** Minimal request; response is your public IP.
+* **When:** License validation in Pro.
+* **Terms:** https://geo.ipify.org/terms-of-service
+* **Privacy:** https://geo.ipify.org/privacy-policy/
+
+= WordPress.org (api.wordpress.org, downloads.wordpress.org) — Pro only =
+* **What it does:** Core/plugin checksum checks during scanning workflows.
+* **Data sent:** WordPress version and plugin slug as needed for the check.
+* **When:** During relevant Pro scan steps.
+* **Terms:** https://wordpress.com/tos/
+* **Privacy:** https://wordpress.org/about/privacy/
+
+= Consent (Pro) =
+Using a PhantomGuard Pro license and Pro features means those services may process data as described above. Core free hardening does not require a license.
