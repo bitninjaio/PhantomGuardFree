@@ -1,42 +1,41 @@
 # PhantomGuard
 
-**WordPress security hardening with a modern React admin interface.**
+**WordPress security suite: malware scanning, hardening, CDN/DNS, Under Attack Mode, and a modern React admin UI.**
 
-PhantomGuard helps you protect your WordPress site with configurable security rules, audit logging, and one-click presets. The free version includes essential hardening measures; upgrade to PhantomGuard Pro for malware scanning, DNS management, and advanced security features.
+PhantomGuard locks down and monitors your WordPress site—malware scanning, hardening, CDN/DNS protection, and a clear admin dashboard—without editing code by hand.
 
-**Source code:** The admin UI is built with React and webpack. The unminified JavaScript and CSS source is available at [https://github.com/bitninjaio/PhantomGuardFree](https://github.com/bitninjaio/PhantomGuardFree). See [Development Setup](#development-setup) for build instructions.
+Enter a **PhantomGuard Pro** license in the plugin to unlock the complete toolkit.
+
+**Source code:** The admin UI is built with React and webpack. Unminified JavaScript and CSS source is available at [https://github.com/bitninjaio/PhantomGuardFree](https://github.com/bitninjaio/PhantomGuardFree). See [Development Setup](#development-setup) for build instructions.
 
 ---
 
-## Features
-
-### Free Version
+## Highlights
 
 | Feature | Description |
 |---------|-------------|
-| **Security presets** | Basic, Recommended, and Advanced presets for quick configuration |
-| **Force HTTPS for admin** | Redirect admin traffic over HTTPS |
-| **Hide WP version** | Remove version info from frontend and feeds |
-| **Audit logging** | Track security-relevant events in the database |
-| **Obscure login feedback** | Reduce information leakage on the login form |
+| **Malware scanning** | Two-phase scanning with background processing |
+| **Quarantine & cleanup** | Quarantine, restore, and file cleanup workflows |
+| **Security hardening** | 2FA, XML-RPC, REST API, rename login, and more |
+| **Plugin vulnerability check** | Dashboard check via WPVulnerability API with update links |
+| **Under Attack Mode** | One-click DDoS shield sensitivity level 4 (CDN) from the PhantomGuard Dashboard, WordPress Dashboard widget, and admin toolbar; optional email to the site admin when enabled |
+| **Audit logging** | Security-relevant events and scan history |
 | **React admin UI** | Modern interface with i18n (English, German, Italian) |
-| **Dashboard & onboarding** | Overview and guided setup flow |
-| **Settings & Support** | Configuration and help pages |
 
-### PhantomGuard Pro
+### Also included with Pro
 
 | Category | Features |
 |----------|----------|
-| **Malware Scanning** | Two-phase scanning, manual/scheduled scans, quarantine, restore, file preview, scan history |
-| **Security Hardening (Extended)** | Disallow file edit/mods, XML-RPC/REST API disable, rename admin URL, disable WP-Cron, restrict login by IP, Two-Factor Authentication |
-| **DNS Management** | Bunny CDN integration, Pull Zone management, DNS records, free SSL, traffic/geo charts |
-| **Dashboard (Extended)** | Cache purge, Bunny CDN statistics, next scheduled scan info, traffic statistics |
+| **Security presets** | Basic, Recommended, and Advanced, plus fine-grained rule control |
+| **DNS / CDN** | Bunny CDN, pull zones, DNS records, free SSL, traffic/geo analytics |
+| **Extended hardening** | Disallow file edit/mods, disable WP-Cron, restrict login by IP, and more |
+| **Dashboard** | Cache purge, CDN statistics, next scheduled scan, traffic stats |
 
 ---
 
 ## Requirements
 
-- **WordPress** 6.8+
+- **WordPress** 6.5+
 - **PHP** 7.4+
 - **Node.js + npm** (for building the admin UI)
 
@@ -46,9 +45,10 @@ PhantomGuard helps you protect your WordPress site with configurable security ru
 
 ### Installation
 
-1. Install the plugin in WordPress (upload or use plugin directory).
+1. Install the plugin in WordPress (upload or use the plugin directory).
 2. Activate **PhantomGuard** in **Plugins**.
 3. Open **WordPress Admin → PhantomGuard** to access the dashboard.
+4. Add your Pro license under **Settings** to unlock the full suite.
 
 ### Development Setup
 
@@ -73,7 +73,8 @@ phantom-guard/
 ├── includes/                  # Core classes and hardening rules
 │   ├── class-phantom-guard.php
 │   ├── class-phantom-guard-hardening.php
-│   └── hardening/             # Individual rule implementations
+│   ├── hardening/             # Individual rule implementations
+│   └── vulnerability-patcher/ # Plugin vulnerability check (WPVulnerability)
 ├── admin/                     # WP admin integration and AJAX handlers
 ├── src/                       # React admin app source
 │   ├── App.jsx
@@ -94,6 +95,7 @@ phantom-guard/
 | Core plugin | `includes/class-phantom-guard.php` | Main plugin logic and hook registration |
 | Hardening engine | `includes/class-phantom-guard-hardening.php` | Rule loading, presets, audit log |
 | Hardening rules | `includes/hardening/` | Per-rule implementations (base, hide-version, audit-log, etc.) |
+| Vulnerability check | `includes/vulnerability-patcher/` | WPVulnerability API plugin checks for the dashboard |
 | Admin UI | `src/` | React app with routing and i18n |
 
 ---
@@ -102,13 +104,14 @@ phantom-guard/
 
 | Service | Used by | Purpose |
 |---------|---------|---------|
+| WPVulnerability API | PhantomGuard | Plugin vulnerability metadata for the dashboard |
 | Google Fonts | PhantomGuard | Mulish font for admin UI |
-| BitNinja API | Pro | Malware scanning |
+| BitNinja API | Pro | Malware scanning, quarantine, license validation |
 | GoQR | Pro | 2FA QR code generation |
-| IPify | Pro | IP detection |
-| WordPress.org | Pro | Plugin/theme version checks |
+| IPify | Pro | Public IP detection for license validation |
+| WordPress.org | Pro | Core/plugin checksum checks during scanning |
 
-See `README.txt` for the full external services section with data flows, terms, and privacy URLs.
+See the **Frequently Asked Questions** in [`README.txt`](README.txt) for data flows, terms, and privacy URLs.
 
 ---
 
